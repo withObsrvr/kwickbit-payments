@@ -16,9 +16,6 @@
           google-cloud-pubsub
         ]);
 
-        # Path to cdp-pipeline-workflow binary (built from parent repo)
-        cdpPipelinePath = ../cdp-pipeline-workflow;
-
         # Runtime dependencies
         runtimeDeps = with pkgs; [
           # Container tools
@@ -45,12 +42,19 @@
 
           CONFIG_FILE="''${1:-config/kwickbit-payments-full.yaml}"
 
-          # Check if CDP Pipeline binary exists
-          CDP_BINARY="${cdpPipelinePath}/cdp-pipeline-workflow"
-          if [ ! -f "$CDP_BINARY" ]; then
-            echo "❌ Error: CDP Pipeline binary not found at $CDP_BINARY"
+          # Look for CDP Pipeline binary in common locations
+          if [ -f "../cdp-pipeline-workflow/cdp-pipeline-workflow" ]; then
+            CDP_BINARY="../cdp-pipeline-workflow/cdp-pipeline-workflow"
+          elif [ -f "../cdp-pipeline-workflow/result/bin/cdp-pipeline-workflow" ]; then
+            CDP_BINARY="../cdp-pipeline-workflow/result/bin/cdp-pipeline-workflow"
+          else
+            echo "❌ Error: CDP Pipeline binary not found"
+            echo "Searched locations:"
+            echo "  ../cdp-pipeline-workflow/cdp-pipeline-workflow"
+            echo "  ../cdp-pipeline-workflow/result/bin/cdp-pipeline-workflow"
+            echo ""
             echo "Please build it first:"
-            echo "  cd ${cdpPipelinePath}"
+            echo "  cd ../cdp-pipeline-workflow"
             echo "  nix build"
             echo "  # or"
             echo "  CGO_ENABLED=1 go build -o cdp-pipeline-workflow"
