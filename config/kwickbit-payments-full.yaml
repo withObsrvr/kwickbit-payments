@@ -1,0 +1,43 @@
+pipelines:
+  KwickbitPaymentPipeline:
+    source:
+      type: BufferedStorageSourceAdapter
+      config:
+        bucket_name: "obsrvr-stellar-ledger-data-testnet-data/landing/ledgers/testnet"
+        network: "testnet"
+        num_workers: 10
+        retry_limit: 3
+        retry_wait: 5
+        start_ledger: 1281924
+        end_ledger: 1281926
+        ledgers_per_file: 1
+        files_per_partition: 64000
+    processors:
+      - type: ContractEvent
+        config:
+          network_passphrase: "Test SDF Network ; September 2015"
+      - type: ContractFilter
+        config:
+          network_passphrase: "Test SDF Network ; September 2015"
+          contract_id: "CCQBTIFXJ6RE43YSQDGWNXBMVLBRKVBAIE3IE6225T4LLO374RNTPS5G"
+      - type: EventPaymentExtractor
+        config:
+          network_passphrase: "Test SDF Network ; September 2015"
+    consumers:
+      - type: SaveEventPaymentToPostgreSQL
+        config:
+          host: "localhost"
+          port: 5432
+          database: "kwickbit"
+          username: "postgres"
+          password: "${DB_PASSWORD}"
+          sslmode: "disable"
+          max_open_conns: 10
+          max_idle_conns: 5
+      - type: PublishToGooglePubSub
+        config:
+          project_id: "${PUBSUB_PROJECT_ID}"
+          topic_id: "payments"
+          # Credentials from env var: GCLOUD_PUBSUB_PUBLISHER_SERVICE_ACCOUNT_KEY
+          # Or use: credentials_file: "/path/to/service-account.json"
+          # For local testing with emulator: export PUBSUB_EMULATOR_HOST=localhost:8085
