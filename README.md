@@ -99,7 +99,7 @@ docker-compose up -d
 ```
 
 This starts:
-- PostgreSQL on port 5432
+- PostgreSQL on port 5434 (mapped from container's internal 5432)
 - Google Pub/Sub emulator on port 8085
 
 #### 4. Create Pub/Sub Topic (Local Emulator)
@@ -314,7 +314,7 @@ python3 setup/create_topics.py  # Creates topic + push subscription
 - type: SaveEventPaymentToPostgreSQL
   config:
     host: "localhost"
-    port: 5432
+    port: 5434
     database: "kwickbit"
     username: "postgres"
     password: "${DB_PASSWORD}"    # From env var
@@ -368,7 +368,7 @@ python3 setup/create_topics.py  # Creates topic + push subscription
 
 ```bash
 # Test PostgreSQL connection
-psql -h localhost -p 5432 -U postgres -d kwickbit
+psql -h localhost -p 5434 -U postgres -d kwickbit
 
 # Check if container is running
 docker ps | grep postgres

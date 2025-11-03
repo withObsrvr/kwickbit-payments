@@ -27,7 +27,7 @@ pipelines:
       - type: SaveEventPaymentToPostgreSQL
         config:
           host: "localhost"
-          port: 5432
+          port: 5434
           database: "kwickbit_test"
           username: "postgres"
           password: "${DB_PASSWORD}"

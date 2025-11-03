@@ -117,7 +117,7 @@
           sleep 5
 
           # Check PostgreSQL
-          until ${pkgs.docker}/bin/docker exec kwickbit-postgres ${pkgs.postgresql}/bin/pg_isready -U postgres > /dev/null 2>&1; do
+          until ${pkgs.docker}/bin/docker exec kwickbit-postgres pg_isready -U postgres > /dev/null 2>&1; do
             echo "  Waiting for PostgreSQL..."
             sleep 2
           done
@@ -172,8 +172,6 @@
 
         # Pull messages from Pub/Sub
         pull-messages = pkgs.writeShellScriptBin "pull-messages" ''
-          LIMIT="''${1:-10}"
-
           if [ -z "$PUBSUB_EMULATOR_HOST" ]; then
             export PUBSUB_EMULATOR_HOST="localhost:8085"
           fi
@@ -182,11 +180,8 @@
             export PUBSUB_PROJECT_ID="local-dev-project"
           fi
 
-          echo "📬 Pulling last $LIMIT messages from Pub/Sub..."
-          ${pkgs.google-cloud-sdk}/bin/gcloud pubsub subscriptions pull payments-sub \
-            --auto-ack \
-            --project="$PUBSUB_PROJECT_ID" \
-            --limit="$LIMIT"
+          echo "📬 Pulling messages from Pub/Sub emulator..."
+          ${pythonEnv}/bin/python3 setup/test_pubsub.py
         '';
 
       in
