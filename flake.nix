@@ -163,7 +163,7 @@
 
           echo "📊 Querying last $LIMIT payments from PostgreSQL..."
           ${pkgs.docker}/bin/docker exec -i kwickbit-postgres \
-            ${pkgs.postgresql}/bin/psql -U postgres -d kwickbit -c \
+            psql -U postgres -d kwickbit -c \
             "SELECT id, payment_id, amount, merchant_id, block_height
              FROM event_payments
              ORDER BY block_height DESC
