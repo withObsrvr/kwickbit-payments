@@ -27,9 +27,42 @@ EventPaymentExtractor (NEW - extract payment fields)
 
 ## Quick Start
 
-### Option A: Using Nix Flake (Recommended for NixOS)
+Choose the path that works best for your development environment:
 
-The easiest way to run the indexer on NixOS:
+### Option A: Docker Compose (Recommended for Most Developers)
+
+**No Nix or parent repo required** - everything runs in containers:
+
+```bash
+# 1. Start all services (PostgreSQL, Pub/Sub emulator, and indexer)
+docker-compose up -d
+
+# 2. View logs
+docker-compose logs -f indexer
+
+# 3. Stop everything
+docker-compose down
+```
+
+That's it! The indexer will automatically:
+- Wait for PostgreSQL and Pub/Sub to be healthy
+- Connect to the local services
+- Start processing payment events
+
+**Query results:**
+```bash
+# View payments in PostgreSQL
+docker exec -it kwickbit-postgres psql -U postgres -d kwickbit -c \
+  "SELECT * FROM event_payments ORDER BY block_height DESC LIMIT 10;"
+
+# Check Pub/Sub messages (requires gcloud CLI with PUBSUB_EMULATOR_HOST set)
+export PUBSUB_EMULATOR_HOST=localhost:8085
+gcloud pubsub subscriptions pull payments-sub --auto-ack --limit=10 --project=local-dev-project
+```
+
+### Option B: Using Nix Flake (For Nix Users)
+
+If you're using Nix for development:
 
 ```bash
 # Enter the Nix development environment
@@ -62,7 +95,24 @@ teardown-local
 - `pull-messages [limit]` - Pull messages from Pub/Sub subscription
 - `teardown-local` - Stop all local services
 
-### Option B: Manual Setup
+### Option C: Standalone Docker Script
+
+Run the indexer with a simple script without docker-compose:
+
+```bash
+# 1. Start PostgreSQL and Pub/Sub (without indexer)
+docker-compose up -d postgres pubsub-emulator
+
+# 2. Run indexer with the script
+./run.sh
+
+# Or with custom config:
+CONFIG_FILE=config/my-config.yaml ./run.sh
+```
+
+See `.env.example` for available environment variables.
+
+### Option D: Manual Setup
 
 #### 1. Prerequisites
 
@@ -90,19 +140,7 @@ export GCLOUD_PUBSUB_PUBLISHER_SERVICE_ACCOUNT_KEY='{"type": "service_account", 
 export PUBSUB_EMULATOR_HOST="localhost:8085"
 ```
 
-#### 3. Run Locally with Docker
-
-**Using Docker Compose:**
-
-```bash
-docker-compose up -d
-```
-
-This starts:
-- PostgreSQL on port 5434 (mapped from container's internal 5432)
-- Google Pub/Sub emulator on port 8085
-
-#### 4. Create Pub/Sub Topic (Local Emulator)
+#### 3. Create Pub/Sub Topic (Local Emulator)
 
 ```bash
 # Set emulator host
@@ -113,7 +151,7 @@ export PUBSUB_PROJECT_ID="local-dev-project"
 python3 setup/create_topics.py
 ```
 
-#### 5. Run the Indexer
+#### 4. Run the Indexer
 
 ```bash
 # Set environment variables
