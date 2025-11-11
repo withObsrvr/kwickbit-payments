@@ -49,16 +49,8 @@ That's it! The indexer will automatically:
 - Connect to the local services
 - Start processing payment events
 
-**Query results:**
-```bash
-# View payments in PostgreSQL
-docker exec -it kwickbit-postgres psql -U postgres -d kwickbit -c \
-  "SELECT * FROM event_payments ORDER BY block_height DESC LIMIT 10;"
-
-# Check Pub/Sub messages (requires gcloud CLI with PUBSUB_EMULATOR_HOST set)
-export PUBSUB_EMULATOR_HOST=localhost:8085
-gcloud pubsub subscriptions pull payments-sub --auto-ack --limit=10 --project=local-dev-project
-```
+**Verify it's working:**
+See [Verifying Indexed Data](#verifying-indexed-data) below for how to check PostgreSQL and Pub/Sub.
 
 ### Option B: Using Nix Flake (For Nix Users)
 
@@ -171,6 +163,84 @@ SaveEventPaymentToPostgreSQL: Saved payment id=1281925-86e3bb96-2, payment_id=0x
 PublishToGooglePubSub: Published payment_id=0x71b203759c071753..., messageID=12345
 Processing ledger 1281925...
 ...
+```
+
+## Verifying Indexed Data
+
+After running the indexer, verify that data was successfully indexed to both PostgreSQL and Pub/Sub.
+
+### Check PostgreSQL
+
+**View all payments:**
+```bash
+docker exec -it kwickbit-postgres psql -U postgres -d kwickbit -c \
+  "SELECT * FROM event_payments ORDER BY block_height DESC LIMIT 10;"
+```
+
+**Count total payments:**
+```bash
+docker exec -it kwickbit-postgres psql -U postgres -d kwickbit -c \
+  "SELECT COUNT(*) as total_payments FROM event_payments;"
+```
+
+**View payments with details:**
+```bash
+docker exec -it kwickbit-postgres psql -U postgres -d kwickbit -c \
+  "SELECT id, payment_id, amount, merchant_id, block_height, block_timestamp
+   FROM event_payments
+   ORDER BY block_height DESC
+   LIMIT 5;"
+```
+
+**Interactive PostgreSQL shell:**
+```bash
+docker exec -it kwickbit-postgres psql -U postgres -d kwickbit
+# Then run queries like: SELECT * FROM event_payments;
+```
+
+### Check Pub/Sub Messages
+
+**Option 1: Using Python script (recommended for Docker):**
+
+First, create the subscription if it doesn't exist:
+```bash
+export PUBSUB_EMULATOR_HOST=localhost:8085
+export PUBSUB_PROJECT_ID=local-dev-project
+python3 setup/create_topics.py
+```
+
+Then pull messages:
+```bash
+export PUBSUB_EMULATOR_HOST=localhost:8085
+export PUBSUB_PROJECT_ID=local-dev-project
+python3 setup/test_pubsub.py
+```
+
+**Option 2: Using gcloud CLI:**
+
+If you have `gcloud` CLI installed:
+```bash
+export PUBSUB_EMULATOR_HOST=localhost:8085
+gcloud pubsub subscriptions pull payments-sub \
+  --auto-ack \
+  --limit=10 \
+  --project=local-dev-project
+```
+
+**Expected message format:**
+```json
+{
+  "id": "1419320-3a2f5cf6-2",
+  "payment_id": "0x3d19724dfcea55fcc0809c84529e65e0d75f8fdcbf612604494369233ace6407",
+  "token_id": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
+  "amount": 100000,
+  "from_id": "GACITQZ7I4CQU5YLMWV4F274NVZJ2RSP6NISYJSYBK47D2IONAL26MBH",
+  "merchant_id": "GAQREXOUVV6XLQAWHZ3CMMZPMQJ5QDIWU2DWP4CDDTTIFHUPZPJEFFRJ",
+  "royalty_amount": 2000,
+  "tx_hash": "3a2f5cf6...",
+  "block_height": 1419320,
+  "block_timestamp": "2025-11-11T19:44:46Z"
+}
 ```
 
 ## Database Schema

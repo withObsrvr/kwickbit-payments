@@ -7,6 +7,7 @@ set -e
 # Default values
 CONFIG_FILE="${CONFIG_FILE:-config/kwickbit-payments-full.yaml}"
 DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5434}"
 DB_PASSWORD="${DB_PASSWORD:-test}"
 DB_DATABASE="${DB_DATABASE:-kwickbit}"
 PUBSUB_PROJECT_ID="${PUBSUB_PROJECT_ID:-local-dev-project}"
@@ -14,7 +15,7 @@ PUBSUB_EMULATOR_HOST="${PUBSUB_EMULATOR_HOST:-localhost:8085}"
 
 echo "Running Kwickbit Payment Indexer with Docker..."
 echo "Config: $CONFIG_FILE"
-echo "DB Host: $DB_HOST"
+echo "DB: $DB_HOST:$DB_PORT/$DB_DATABASE"
 echo "Pub/Sub Emulator: $PUBSUB_EMULATOR_HOST"
 echo ""
 
@@ -30,6 +31,7 @@ docker run --rm \
   --network host \
   -v "$(pwd)/config:/app/config" \
   -e DB_HOST="$DB_HOST" \
+  -e DB_PORT="$DB_PORT" \
   -e DB_PASSWORD="$DB_PASSWORD" \
   -e DB_DATABASE="$DB_DATABASE" \
   -e PUBSUB_PROJECT_ID="$PUBSUB_PROJECT_ID" \

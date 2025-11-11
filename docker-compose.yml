@@ -31,7 +31,7 @@ services:
   indexer:
     image: withobsrvr/obsrvr-flow-pipeline:latest
     container_name: kwickbit-indexer
-    command: /app/bin/cdp-pipeline-workflow -config /app/config/kwickbit-payments-full.yaml
+    command: /app/bin/cdp-pipeline-workflow -config /app/config/kwickbit-payments-docker.yaml
     volumes:
       - ./config:/app/config
     environment:
@@ -45,7 +45,7 @@ services:
         condition: service_healthy
       pubsub-emulator:
         condition: service_healthy
-    restart: unless-stopped
+    restart: no
 
 volumes:
   postgres_data:
