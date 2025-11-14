@@ -6,8 +6,8 @@ pipelines:
         rpc_url: "https://stellar-soroban-testnet-public.nodies.app"
         auth_header: ""
         poll_interval: 4
-        start_ledger: 1419320
-        end_ledger: 1419322
+        start_ledger: 1556742
+        end_ledger: 1556743
         format: "xdrFormat"
         rpc_method: "getLedgers"
         num_workers: 10
