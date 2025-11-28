@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: kwickbit-postgres
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: kwickbit
+      POSTGRES_USER: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  indexer:
+    image: withobsrvr/obsrvr-flow-pipeline:latest
+    container_name: kwickbit-indexer
+    command: /app/bin/cdp-pipeline-workflow -config /app/config/kwickbit-payments-contract-events.yaml
+    volumes:
+      - ./config:/app/config
+    environment:
+      - DB_HOST=postgres
+      - DB_PASSWORD=test
+      - DB_DATABASE=kwickbit
+      - PUBSUB_PROJECT_ID=local-dev-project
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: no
+
+volumes:
+  postgres_data:

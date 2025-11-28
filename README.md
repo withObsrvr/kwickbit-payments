@@ -37,6 +37,9 @@ Choose the path that works best for your development environment:
 # 1. Start all services (PostgreSQL, Pub/Sub emulator, and indexer)
 docker-compose up -d
 
+# To view all contract events
+# docker compose -f docker-compose-contract-events.yml up -d
+
 # 2. View logs
 docker-compose logs -f indexer
 
